@@ -1,2 +1,0 @@
-# skatle
-the hockey wordle
