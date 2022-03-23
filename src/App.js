@@ -5,10 +5,16 @@ import axios from 'axios';
 import players, { getPlayerId } from '@nhl-api/players';
 import seedrandom from 'seedrandom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowDown, faArrowUp, faCircleXmark, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
+import { faArrowDown, faArrowUp, faCircleXmark, faQuestionCircle, faShareFromSquare } from '@fortawesome/free-solid-svg-icons';
+import moment from 'moment';
 
-
+const initialDate = new Date("03/23/2022");
 const currentDate = new Date();
+
+var difference = Math.ceil(Math.abs(currentDate - initialDate));
+var diff = new moment.duration(difference);
+var dayNumber = Math.ceil(diff.asDays());
+
 const month = currentDate.getMonth();
 const date = currentDate.getDate();
 const year = currentDate.getFullYear();
@@ -46,10 +52,60 @@ function App() {
           setPlayer();
         }
     }
-    if(userWin) {
-      console.log("congrats, you won!")
-    }
   })
+
+/*
+  index: guessCount,
+  name: playerData.fullName,
+  nameTruth: false,
+  team: playerTeamData.abbreviation,
+  teamTruth: false,
+  division: playerTeamData.division.name,
+  divisionTruth: false,
+  conference: playerTeamData.conference.name,
+  conferenceTruth: false,
+  shoots: playerData.shootsCatches,
+  shootsTruth: false,
+  country: playerData.birthCountry,
+  countryTruth: false,
+  dob: YOB,
+  dobTruth: false,
+  dobAbove: false,
+  dobBelow: false,
+  position: playerData.primaryPosition.code,
+  positionTruth: false
+*/
+
+  function setText() {
+    var rowsString = "";
+    for(var i = 0; i < rows.length; i++) {
+      if(rows[i].nameTruth == true) rowsString = rowsString.concat("🟩");
+      else rowsString = rowsString.concat("⬜");
+
+      if(rows[i].teamTruth == true) rowsString = rowsString.concat("🟩");
+      else if(rows[i].divisionTruth == true) rowsString = rowsString.concat("🟨");
+      else rowsString = rowsString.concat("⬜");
+
+      if(rows[i].shootsTruth == true) rowsString = rowsString.concat("🟩");
+      else rowsString = rowsString.concat("⬜");
+
+      if(rows[i].countryTruth == true) rowsString = rowsString.concat("🟩");
+      else rowsString = rowsString.concat("⬜");
+
+      if(rows[i].dobTruth == true) rowsString = rowsString.concat("🟩")
+      else if(rows[i].dobAbove == true || rows[i].dobBelow == true) rowsString = rowsString.concat("🟨");
+      else rowsString = rowsString.concat("⬜");
+
+      if(rows[i].positionTruth == true) rowsString = rowsString.concat("🟩");
+      else rowsString = rowsString.concat("⬜");
+
+      rowsString = rowsString.concat("\n");
+    }
+
+    rowsString = rowsString.concat("Skatle #" + dayNumber + " " + rows.length + "/8\n\nhttps://skatle.herokuapp.com/");
+
+    return rowsString;
+  }
 
   function infoSetter() {
     if (howToPlay == true)
@@ -143,9 +199,7 @@ function App() {
       correctForwardCheck = true;
     if(userForwardCheck && correctForwardCheck)
       compareCheck.position = true;
-    
-      console.log(userGuess.dob)
-      console.log(correctPlayerInfo.dob)
+
     if(userGuess.team == correctPlayerInfo.team) compareCheck.team = true;
     if(userGuess.division == correctPlayerInfo.division) compareCheck.division = true;
     if(userGuess.conference == correctPlayerInfo.conference) compareCheck.conference = true;
@@ -158,7 +212,7 @@ function App() {
     return compareCheck;
   }
 
-  
+
 
   async function doGuess() {
     
@@ -214,7 +268,6 @@ function App() {
       
 
       var comparison = comparePlayer(newRow);
-      console.log(comparison);
       
       if(comparison.name) newRow.nameTruth = true;
       if(comparison.team) newRow.teamTruth = true;
@@ -292,12 +345,15 @@ function App() {
         <div className="correctDiv">
           <h1>You guessed today's player!</h1>
           <h2>{correctPlayerInfo.name}</h2>
-        </div>)}
+          <button onClick={() => {navigator.clipboard.writeText(setText())}}><FontAwesomeIcon icon={faShareFromSquare} />Share</button>
+        </div>
+      )}
       {(userLose && 
         <div className="correctDiv">
           <h1>You didn't get today's player</h1>
           <h2>{correctPlayerInfo.name}</h2>
-        </div>)}
+        </div>
+      )}
       {(howToPlay && 
         <div className="infoContainer">
           <div className="gameInfo">
