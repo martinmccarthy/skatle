@@ -260,6 +260,7 @@ function App() {
       <br />
       <table className="guessTable">
         <thead className="table-header">
+          
           <th className="heading">Name</th>
           <th className="heading">Team</th>
           <th className="heading">Shoots/Catches</th>
