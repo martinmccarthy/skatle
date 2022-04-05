@@ -7,9 +7,13 @@ import seedrandom from 'seedrandom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowDown, faArrowUp, faCircleXmark, faQuestionCircle, faShareFromSquare } from '@fortawesome/free-solid-svg-icons';
 import moment from 'moment';
+import { useCookies } from 'react-cookie';
 
 const initialDate = new Date("03/23/2022");
 const currentDate = new Date();
+const tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
+tomorrow.setHours(0,0,0,0);
 
 var difference = Math.ceil(Math.abs(currentDate - initialDate));
 var diff = new moment.duration(difference);
@@ -22,59 +26,74 @@ const year = currentDate.getFullYear();
 const dateStr = "" + year + month + date;
 const generator = seedrandom(parseInt(dateStr))
 
+
 function App() {
   var teamOfTheDay = Math.floor(generator() *  32) + 1;
 
+  const [cookies, setCookie, removeCookie] = useCookies(["user", "count", "winBool", "loseBool", "storage"])
   
   const [guessCount, setGuessCount] = useState(0);
   const [rows, setRows] = useState([]);
   const [currentGuess, setCurrentGuess] = useState("");
-  const [correctGuess, setCorrectGuess] = useState();
+  const [correctGuess, setCorrectGuess] = useState(false);
   const [correctPlayerInfo, setCorrectPlayerInfo] = useState({});
-
+  const [startedUp, setStartedUp] = useState(false);
   const [userWin, setUserWin] = useState(false);
   const [userLose, setUserLose] = useState(false);
 
   const [howToPlay, setHowToPlay] = useState(false);
-  //console.log(correctGuess);
-  
   useEffect(() => {
-    // if we havent set todays guess we have to do that
-    if (!correctGuess){
-      /* the api has random teams for certain numbers, so this is 
-         converting them to get the right rosters */
-      
-         if(teamOfTheDay == 11) teamOfTheDay = 54;// if thrashers -> golden knights
-         if(teamOfTheDay == 27) teamOfTheDay = 53; // if phoenix coyotes -> arizona coyotes
-         if(teamOfTheDay == 0) teamOfTheDay = 55; // if nordiques -> kraken
-         if(teamOfTheDay == 31) teamOfTheDay = 52; // north stars -> winnipeg jets
-         if(Object.keys(correctPlayerInfo).length === 0) {
+    if(!startedUp) startUp();
+  }, [userLose, userWin]);
+
+  function startUp() {
+    // if we dont have storage, we'll check to see if there is some in cookies
+    if(cookies.storage) {
+      storageManager();
+    }
+    // if we havent set todays guess and there is nothing in storage for today we have to do that
+    if (!correctGuess && !cookies.storage.correct){
+      console.log("test");
+      /* the api has random int values for certain teams, so this is 
+          converting them to get the right rosters */
+          if(teamOfTheDay == 11) teamOfTheDay = 54;// if thrashers -> golden knights
+          if(teamOfTheDay == 27) teamOfTheDay = 53; // if phoenix coyotes -> arizona coyotes
+          if(teamOfTheDay == 0) teamOfTheDay = 55; // if nordiques -> kraken
+          if(teamOfTheDay == 31) teamOfTheDay = 52; // north stars -> winnipeg jets
+          if(Object.keys(correctPlayerInfo).length === 0) {
           setPlayer();
         }
     }
-  })
+    setStartedUp(true);
+  }
 
-/*
-  index: guessCount,
-  name: playerData.fullName,
-  nameTruth: false,
-  team: playerTeamData.abbreviation,
-  teamTruth: false,
-  division: playerTeamData.division.name,
-  divisionTruth: false,
-  conference: playerTeamData.conference.name,
-  conferenceTruth: false,
-  shoots: playerData.shootsCatches,
-  shootsTruth: false,
-  country: playerData.birthCountry,
-  countryTruth: false,
-  dob: YOB,
-  dobTruth: false,
-  dobAbove: false,
-  dobBelow: false,
-  position: playerData.primaryPosition.code,
-  positionTruth: false
-*/
+  function storageManager() {
+    if(cookies.user && rows.length == 0) { // if we have info in cookies and its not on the page we put it there
+      setRows(cookies.user);
+      setGuessCount(cookies.user.length);
+      if(cookies.winBool) setUserWin(true);  // if user has already won then we set the win 
+      if(cookies.loseBool) setUserLose(true);  // if user has already lost then we set the lose
+    }
+    if(cookies.storage) {
+      setCorrectPlayerInfo(cookies.storage.correctInfo);
+      setCorrectGuess(true);
+    }
+    else {
+      var correct;
+      if(correctGuess) correct = true;
+
+      var x = {
+        correct: correct,
+        correctInfo: correctPlayerInfo,
+      }
+
+      setCookie("storage", x, {
+        path: "/",
+        expires: tomorrow
+      })
+    }
+  }
+
 
   function setText() {
     var rowsString = "";
@@ -102,8 +121,8 @@ function App() {
       rowsString = rowsString.concat("\n");
     }
 
-    rowsString = rowsString.concat("Skatle #" + dayNumber + " " + rows.length + "/8\n\nhttps://skatle.herokuapp.com/");
-
+    if(userWin == true) rowsString = rowsString.concat("Skatle #" + dayNumber + " " + rows.length + "/8\n\nhttps://skatle.herokuapp.com/");
+    else rowsString = rowsString.concat("Skatle #" + dayNumber + " X" + "/8\n\nhttps://skatle.herokuapp.com/");
     return rowsString;
   }
 
@@ -112,6 +131,11 @@ function App() {
       setHowToPlay(false);
     else
       setHowToPlay(true);
+      // removeCookie("count");
+      // removeCookie("user");
+      // removeCookie("winBool");
+      // removeCookie("loseBool");
+
   }
 
   async function setPlayer() {
@@ -127,9 +151,7 @@ function App() {
     }).then(function (response) {
       var playerToPick = Math.floor(generator() * response.data.roster.length);
       var player = response.data.roster[playerToPick];
-      //response.data.roster.;
       correctID = player.person.id;
-      //setCorrectGuess(player.person.id);
     }).catch(err => {
       console.log(err);
     })
@@ -154,19 +176,17 @@ function App() {
       console.log(err);
     })
     
-    setCorrectPlayerInfo(
-      {
-        name: playerData.fullName,
-        team: playerTeamData.abbreviation, 
-        division: playerTeamData.division.name,
-        conference: playerTeamData.conference.name,
-        shoots: playerData.shootsCatches,
-        country: playerData.birthCountry,
-        dob: YOB,
-        position: playerData.primaryPosition.code
-      }
-    )
-
+    setCorrectPlayerInfo({
+      name: playerData.fullName,
+      team: playerTeamData.abbreviation, 
+      division: playerTeamData.division.name,
+      conference: playerTeamData.conference.name,
+      shoots: playerData.shootsCatches,
+      country: playerData.birthCountry,
+      dob: YOB,
+      position: playerData.primaryPosition.code
+    })
+    setCorrectGuess(true);
   }
   
   function comparePlayer(userGuess) {
@@ -181,10 +201,22 @@ function App() {
       userAbove: false,
       position: false
     }
-
+    console.log(guessCount);
     if(userGuess.name == correctPlayerInfo.name) {
       compareCheck.name = true;
       setUserWin(true);
+      setCookie("winBool", true, {
+        path: "/",
+        expires: tomorrow
+      });
+    }
+    else if(guessCount + 1 == 8 && userGuess.name != correctPlayerInfo.name) {
+      setUserLose(true)
+      setCookie("loseBool", true, {
+        path: "/",
+        expires: tomorrow
+      })
+      console.log("test");
     }
 
     var userForwardCheck = false;
@@ -213,17 +245,36 @@ function App() {
   }
 
 
+  function updateCookie(newRows, newGuessCount) {
+    setCookie("user", newRows, {
+      path: "/",
+      expires: tomorrow
+    });
+    
+    setCookie("count", newGuessCount, {
+      path: "/",
+      expires: tomorrow
+    });
+  }
 
   async function doGuess() {
-    
-
-    if(guessCount > 7) {
+    if(guessCount == 8) {
       if(userLose == false) setUserLose(true);
-      return;
-    } 
+      updateCookie(rows, 8);
+    }
     else {
+      var playerId;
       var playerData;
-      const playerId = getPlayerId(currentGuess);
+      // some players have special cases where they dont return in searches, theyre accounted for here
+      switch(currentGuess.toLowerCase()) {
+        case "ryan o'rielly":
+          playerId = 8475158;
+          break;
+        default:
+          playerId = getPlayerId(currentGuess);
+          break;
+      }
+      
       var playerTeamData;
 
       // get player data from user lookup
@@ -244,7 +295,7 @@ function App() {
 
       var YOB = playerData.birthDate.substring(0, 4);
       var newRow = {
-        index: guessCount,
+        index: rows.length,
         name: playerData.fullName,
         nameTruth: false,
         team: playerTeamData.abbreviation,
@@ -265,8 +316,6 @@ function App() {
         positionTruth: false
       }
 
-      
-
       var comparison = comparePlayer(newRow);
       
       if(comparison.name) newRow.nameTruth = true;
@@ -280,6 +329,7 @@ function App() {
       if(comparison.userAbove) newRow.dobAbove = true;
       if(comparison.position) newRow.positionTruth = true;
 
+      //setting position to F for all forwards
       if(playerData.primaryPosition.code == 'L' || playerData.primaryPosition.code == 'R' || playerData.primaryPosition.code == 'C')
         newRow.position = 'F'
 
@@ -287,7 +337,9 @@ function App() {
       updatedRows.push(newRow);
 
       setRows(updatedRows);
-      setGuessCount(guessCount + 1);
+      setGuessCount(guessCount + 1);    
+
+      updateCookie(updatedRows, guessCount + 1);
     }
   }
   
@@ -305,8 +357,7 @@ function App() {
         <h2 id="skatle-desc">Guess the hockey player daily</h2>
       </div>
       
-      {(userWin === false) && // if the user wins then we remove the submit 
-                              // button so they cant keep playing
+      {(userWin === false && userLose == false) && //if the user wins/loses then we remove the submit button so they cant keep playing
         <div>
           <input type="text" placeholder="player name" value={currentGuess} onChange={handleChange}/>
           <button id="submitBtn" onClick={doGuess}>Submit</button>
@@ -323,23 +374,25 @@ function App() {
           <th className="heading">Year Born</th>
           <th className="heading">Position</th>
         </thead>
-        {rows.map((r) => (
-          <tbody className="table-body">
-            <td className="data" style={{backgroundColor: r.nameTruth ? 'green' : 'white'}}>{r.name}</td>
-           {guessCount == 0 && <td style={{backgroundColor: 'white'}}></td>}
-            { (r.divisionTruth == true) &&
-              <td className="data" style={{backgroundColor: r.teamTruth ? 'green' : 'yellow'}}>{r.team}</td>}
-            { (r.divisionTruth == false) &&
-              <td className="data" style={{backgroundColor: r.teamTruth ? 'green' : 'white'}}>{r.team}</td>}
-            <td className="data" style={{backgroundColor: r.shootsTruth ? 'green' : 'white'}}>{r.shoots}</td>
-            <td className="data" style={{backgroundColor: r.countryTruth ? 'green' : 'white'}}>{r.country}</td>
-            <td className="data" style={{backgroundColor: r.dobTruth ? 'green' : 'white'}}>
-              {(r.dobAbove == true) && <FontAwesomeIcon icon={faArrowDown} />}
-              {(r.dobBelow == true) && <FontAwesomeIcon icon={faArrowUp} />}
-              {r.dob}</td>
-            <td className="data" style={{backgroundColor: r.positionTruth ? 'green' : 'white'}}>{r.position}</td>
-          </tbody>
-        ))}
+          {rows.map((r) => (
+            <tbody className="table-body">
+              <td className="data" style={{backgroundColor: r.nameTruth ? 'green' : 'white'}}>{r.name}</td>
+              {/*guessCount == 0 && <td style={{backgroundColor: 'white'}}></td>*/}
+              { (r.divisionTruth) &&
+                <td className="data" style={{backgroundColor: r.teamTruth ? 'green' : 'yellow'}}>{r.team}</td>}
+              { (!r.divisionTruth) &&
+                <td className="data" style={{backgroundColor: r.teamTruth ? 'green' : 'white'}}>{r.team}</td>}
+              <td className="data" style={{backgroundColor: r.shootsTruth ? 'green' : 'white'}}>{r.shoots}</td>
+              <td className="data" style={{backgroundColor: r.countryTruth ? 'green' : 'white'}}>{r.country}</td>
+              <td className="data" style={{backgroundColor: r.dobTruth ? 'green' : 'white'}}>
+                {(r.dobAbove == true) && <FontAwesomeIcon icon={faArrowDown} />}
+                {(r.dobBelow == true) && <FontAwesomeIcon icon={faArrowUp} />}
+                {r.dob}</td>
+              <td className="data" style={{backgroundColor: r.positionTruth ? 'green' : 'white'}}>{r.position}</td>
+            </tbody>
+          ))}
+
+        
       </table>
       {(userWin && 
         <div className="correctDiv">
@@ -352,6 +405,7 @@ function App() {
         <div className="correctDiv">
           <h1>You didn't get today's player</h1>
           <h2>{correctPlayerInfo.name}</h2>
+          <button onClick={() => {navigator.clipboard.writeText(setText())}}><FontAwesomeIcon icon={faShareFromSquare} />Share</button>
         </div>
       )}
       {(howToPlay && 
