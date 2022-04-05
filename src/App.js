@@ -214,7 +214,7 @@ function App() {
         path: "/",
         expires: tomorrow
       })
-      console.log("test");
+      console.log(cookies.user);
     }
 
     var userForwardCheck = false;
