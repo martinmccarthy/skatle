@@ -150,10 +150,10 @@ function App() {
       setHowToPlay(false);
     else
       setHowToPlay(true);
-      // removeCookie("count");
-      // removeCookie("user");
-      // removeCookie("winBool");
-      // removeCookie("loseBool");
+      removeCookie("count");
+      removeCookie("user");
+      removeCookie("winBool");
+      removeCookie("loseBool");
 
   }
 
