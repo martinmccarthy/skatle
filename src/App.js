@@ -52,17 +52,15 @@ function App() {
       storageManager();
     }
     // if we havent set todays guess and there is nothing in storage for today we have to do that
-    if (!correctGuess){
+    if (!correctGuess && !cookies.storage){
       console.log("test");
       /* the api has random int values for certain teams, so this is 
           converting them to get the right rosters */
-          if(teamOfTheDay == 11) teamOfTheDay = 54;// if thrashers -> golden knights
-          if(teamOfTheDay == 27) teamOfTheDay = 53; // if phoenix coyotes -> arizona coyotes
-          if(teamOfTheDay == 0) teamOfTheDay = 55; // if nordiques -> kraken
-          if(teamOfTheDay == 31) teamOfTheDay = 52; // north stars -> winnipeg jets
-          if(Object.keys(correctPlayerInfo).length === 0) {
-          setPlayer();
-        }
+        if(teamOfTheDay == 11) teamOfTheDay = 54;// if thrashers -> golden knights
+        if(teamOfTheDay == 27) teamOfTheDay = 53; // if phoenix coyotes -> arizona coyotes
+        if(teamOfTheDay == 0) teamOfTheDay = 55; // if nordiques -> kraken
+        if(teamOfTheDay == 31) teamOfTheDay = 52; // north stars -> winnipeg jets
+        if(Object.keys(correctPlayerInfo).length === 0) setPlayer();
     }
     setStartedUp(true);
   }
