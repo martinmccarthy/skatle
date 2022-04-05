@@ -48,8 +48,29 @@ function App() {
 
   function startUp() {
     // if we dont have storage, we'll check to see if there is some in cookies
-    if(!cookies.storage) {
-      storageManager();
+    if(cookies.user && rows.length == 0) { // if we have info in cookies and its not on the page we put it there
+      setRows(cookies.user);
+      setGuessCount(cookies.user.length);
+      if(cookies.winBool) setUserWin(true);  // if user has already won then we set the win 
+      if(cookies.loseBool) setUserLose(true);  // if user has already lost then we set the lose
+    }
+    if(cookies.storage) {
+      setCorrectPlayerInfo(cookies.storage.correctInfo);
+      setCorrectGuess(true);
+    }
+    else {
+      var correct;
+      if(correctGuess) correct = true;
+
+      var x = {
+        correct: correct,
+        correctInfo: correctPlayerInfo,
+      }
+
+      setCookie("storage", x, {
+        path: "/",
+        expires: tomorrow
+      })
     }
     // if we havent set todays guess and there is nothing in storage for today we have to do that
     if (!correctGuess && !cookies.storage){
