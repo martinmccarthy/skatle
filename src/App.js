@@ -48,7 +48,7 @@ function App() {
 
   function startUp() {
     // if we dont have storage, we'll check to see if there is some in cookies
-    if(cookies.storage) {
+    if(!cookies.storage) {
       storageManager();
     }
     // if we havent set todays guess and there is nothing in storage for today we have to do that
