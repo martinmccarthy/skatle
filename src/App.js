@@ -52,7 +52,7 @@ function App() {
       storageManager();
     }
     // if we havent set todays guess and there is nothing in storage for today we have to do that
-    if (!correctGuess && !cookies.storage.correct){
+    if (!correctGuess && cookies.storage.correct == null){
       console.log("test");
       /* the api has random int values for certain teams, so this is 
           converting them to get the right rosters */
