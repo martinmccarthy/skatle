@@ -47,14 +47,18 @@ function App() {
   }, [userLose, userWin]);
 
   function startUp() {
-    // if we dont have storage, we'll check to see if there is some in cookies
-    if(cookies.user && rows.length == 0) { // if we have info in cookies and its not on the page we put it there
+    // if we have info in cookies and its not on the page we put it there
+    if(cookies.user && rows.length == 0) { 
       setRows(cookies.user);
       setGuessCount(cookies.user.length);
       if(cookies.winBool) setUserWin(true);  // if user has already won then we set the win 
       if(cookies.loseBool) setUserLose(true);  // if user has already lost then we set the lose
+      // setCorrectPlayerInfo(cookies.storage.correctInfo);
+      // setCorrectGuess(true);
     }
-    if(cookies.storage) {
+    // if the correct answer is in storage then we set it as the correct guess
+    if(cookies.storage != null) {
+      console.log(cookies.storage.correctInfo);
       setCorrectPlayerInfo(cookies.storage.correctInfo);
       setCorrectGuess(true);
     }
@@ -73,15 +77,15 @@ function App() {
       })
     }
     // if we havent set todays guess and there is nothing in storage for today we have to do that
-    if (!correctGuess && !cookies.storage){
+    if (!correctGuess){
       console.log("test");
       /* the api has random int values for certain teams, so this is 
-          converting them to get the right rosters */
-        if(teamOfTheDay == 11) teamOfTheDay = 54;// if thrashers -> golden knights
-        if(teamOfTheDay == 27) teamOfTheDay = 53; // if phoenix coyotes -> arizona coyotes
-        if(teamOfTheDay == 0) teamOfTheDay = 55; // if nordiques -> kraken
-        if(teamOfTheDay == 31) teamOfTheDay = 52; // north stars -> winnipeg jets
-        if(Object.keys(correctPlayerInfo).length === 0) setPlayer();
+        converting them to get the right rosters */
+      if(teamOfTheDay == 11) teamOfTheDay = 54;// if thrashers -> golden knights
+      if(teamOfTheDay == 27) teamOfTheDay = 53; // if phoenix coyotes -> arizona coyotes
+      if(teamOfTheDay == 0) teamOfTheDay = 55; // if nordiques -> kraken
+      if(teamOfTheDay == 31) teamOfTheDay = 52; // north stars -> winnipeg jets
+      if(Object.keys(correctPlayerInfo).length === 0) setPlayer();
     }
     setStartedUp(true);
   }
@@ -150,11 +154,11 @@ function App() {
       setHowToPlay(false);
     else
       setHowToPlay(true);
-      removeCookie("count");
-      removeCookie("user");
-      removeCookie("winBool");
-      removeCookie("loseBool");
-
+      //removeCookie("count");
+      //removeCookie("user");
+     // removeCookie("winBool");
+    //  removeCookie("loseBool");
+    //  removeCookie("storage");
   }
 
   async function setPlayer() {
