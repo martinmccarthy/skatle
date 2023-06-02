@@ -1,4 +1,6 @@
 # SKATLE
+Skatle is a spin-off of the popular word game Wordle, where it will select a new NHL player on its own each day for the user to try to guess in a total of 8 guesses, it provides hints to let the player know their progress.
+
 
 To begin with skatle, download or pull the repository, and in the project directory, you can run:
 
