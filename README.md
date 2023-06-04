@@ -4,6 +4,7 @@ Skatle is a spin-off of the popular word game Wordle, where it will select a new
 
 To begin with skatle, download or pull the repository, and in the project directory, you can run:
 
+### `npm install`
 ### `npm start`
 
 Runs the app in the development mode.\
